@@ -78,7 +78,7 @@ h3 { font-size: 15px; margin: 0 }
 .slot.ra3::before { background: var(--rare) } .slot.ra4::before { background: var(--elite) } .slot.ra5::before { background: var(--ssr) }
 .slot.ra6::before { background: linear-gradient(180deg, #e8577a, #e8b13c, #4fc28a, #4f8fe8, #a35be8) }
 .slot-type { font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 4px }
-.slot-name { font-weight: 500; font-size: 13px; line-height: 1.3; margin-top: 2px; overflow-wrap: anywhere }
+.slot-name { font-weight: 500; font-size: 13px; line-height: 1.3; overflow-wrap: anywhere }
 .slot.empty .slot-name { color: var(--muted); font-weight: 400 }
 .rk { font: 500 10.5px var(--mono); border-radius: 4px; padding: 0 4px; white-space: nowrap }
 .rk.r1 { color: var(--r1); border: 1px solid var(--r1) } .rk.r2 { color: var(--r2); border: 1px solid var(--r2) }
@@ -118,6 +118,18 @@ select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; ba
 .capture th, .capture td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top }
 .tablewrap { overflow-x: auto }
 .status { font-size: 13px; color: var(--muted); white-space: pre-wrap }
+.ico { display: inline-block; flex: none; background-repeat: no-repeat; border-radius: 6px }
+.ico.ph { background: var(--line) }
+.eqbox { display: inline-flex; flex: none; border-radius: 8px; padding: 2px; background: color-mix(in srgb, var(--n) 22%, transparent) }
+.eqbox.ra3 { background: color-mix(in srgb, var(--rare) 24%, transparent) } .eqbox.ra4 { background: color-mix(in srgb, var(--elite) 24%, transparent) }
+.eqbox.ra5 { background: color-mix(in srgb, var(--ssr) 26%, transparent) } .eqbox.ra6 { background: linear-gradient(135deg, rgba(232,87,122,.28), rgba(232,177,60,.28), rgba(79,194,138,.28), rgba(79,143,232,.28), rgba(163,91,232,.28)) }
+.slot-body { display: flex; gap: 8px; align-items: flex-start; margin-top: 3px; min-width: 0 }
+.slot-body > div { min-width: 0 }
+.ship-head { display: flex; gap: 10px; align-items: flex-start }
+.ship-head .ico { border-radius: 10px; border: 1px solid var(--line) }
+.want li > span:first-child { display: inline-flex; align-items: center; gap: 6px; min-width: 0 }
+.chip .ico { margin-left: -6px; border-radius: 999px }
+.drop button > span:first-child { display: inline-flex; align-items: center; gap: 8px }
 .empty-state { text-align: center; padding: 40px 16px; color: var(--muted) }
 
 @media (max-width: 860px) {
@@ -157,6 +169,14 @@ const E = D.E;               // id -> [name, rarity, type, nation]
 const SHIPS = {};            // uid -> ship
 for (const s of D.S) SHIPS[s[0]] = { uid: s[0], kr: s[1], en: s[2], hull: s[3], fac: s[4], rar: s[5], rt: s[6], st: s[7], tabs: s[8], lo: s[9], hl: s[10] };
 const SHIP_LIST = Object.values(SHIPS);
+const SHIP_IDX = {}; D.S.forEach((s, i) => { SHIP_IDX[s[0]] = i; });
+function sprite(kind, idx, size) {
+  if (idx == null) return '<span class="ico ph" style="width:' + size + 'px;height:' + size + 'px" aria-hidden="true"></span>';
+  const a = D.ATLAS[kind], c = idx % a.cols, r = Math.floor(idx / a.cols);
+  return '<span class="ico" aria-hidden="true" style="width:' + size + 'px;height:' + size + 'px;background-image:url(' + a.file + ');background-size:' + (a.cols * size) + 'px auto;background-position:-' + (c * size) + 'px -' + (r * size) + 'px"></span>';
+}
+const eico = (id, size) => '<span class="eqbox ra' + (E[id] ? E[id][1] : 0) + '">' + sprite('eq', D.EI[id], size) + '</span>';
+const sico = (uid, size) => sprite('ship', SHIP_IDX[uid], size);
 const TYPE = {1:'구축포',2:'경순포',3:'중순포',4:'전함포',5:'어뢰',6:'대공',7:'전투기',8:'뇌격기',9:'폭격기',10:'설비',11:'대순포',12:'수상기',13:'잠수함 어뢰',14:'설비',15:'초계기',17:'헬기',18:'적재',20:'미사일',21:'대공(시한신관)'};
 const HULL = {DD:'구축',CL:'경순',CA:'중순',CB:'대순',BB:'전함',BC:'순전',BBV:'항전',CV:'항모',CVL:'경항모',SS:'잠수',SSV:'잠모',AR:'공작',AE:'운송',IX:'범선',IXs:'범선',IXv:'범선',IXm:'범선'};
 const NATCODE = {1:'USS',2:'HMS',3:'IJN',4:'KMS',5:'ROC',6:'RN',7:'SN',8:'FFNF',9:'MNF'};
@@ -339,8 +359,8 @@ function renderResult() {
   const leftList = Object.entries(left).filter(([, v]) => v > 0).map(([k, v]) => [+k, v]).sort((a, b) => erar(b[0]) - erar(a[0]) || b[1] - a[1]);
   const leftHigh = leftList.filter(([id]) => erar(id) >= 5);
   let h = '<div class="summary">';
-  h += '<div class="panel"><h3>창고에 없는 1순위 장비</h3><p class="small muted" style="margin:0 0 8px">숫자는 이 장비가 1순위인 칸 수예요. 만들거나 얻을 순서로 쓰면 돼요.</p><ul class="want">' + (wantList.length ? wantList.map(([id, n]) => '<li><span>' + esc(ename(+id)) + '</span><span class="num">' + n + '칸</span></li>').join('') : '<li class="muted">없음</li>') + '</ul></div>';
-  h += '<div class="panel"><h3>남는 금색·무지개 장비</h3><p class="small muted" style="margin:0 0 8px">어느 칸에도 안 들어간 5성 이상 장비예요.</p><ul class="want">' + (leftHigh.length ? leftHigh.slice(0, 10).map(([id, n]) => '<li><span>' + esc(ename(id)) + '</span><span class="num">×' + n + '</span></li>').join('') + (leftHigh.length > 10 ? '<li class="muted">외 ' + (leftHigh.length - 10) + '종</li>' : '') : '<li class="muted">없음</li>') + '</ul></div>';
+  h += '<div class="panel"><h3>창고에 없는 1순위 장비</h3><p class="small muted" style="margin:0 0 8px">숫자는 이 장비가 1순위인 칸 수예요. 만들거나 얻을 순서로 쓰면 돼요.</p><ul class="want">' + (wantList.length ? wantList.map(([id, n]) => '<li><span>' + eico(+id, 22) + esc(ename(+id)) + '</span><span class="num">' + n + '칸</span></li>').join('') : '<li class="muted">없음</li>') + '</ul></div>';
+  h += '<div class="panel"><h3>남는 금색·무지개 장비</h3><p class="small muted" style="margin:0 0 8px">어느 칸에도 안 들어간 5성 이상 장비예요.</p><ul class="want">' + (leftHigh.length ? leftHigh.slice(0, 10).map(([id, n]) => '<li><span>' + eico(id, 22) + esc(ename(id)) + '</span><span class="num">×' + n + '</span></li>').join('') + (leftHigh.length > 10 ? '<li class="muted">외 ' + (leftHigh.length - 10) + '종</li>' : '') : '<li class="muted">없음</li>') + '</ul></div>';
   h += '<div class="panel"><h3>읽는 법</h3><p class="small" style="margin:0">위에 있는 함대가 장비를 먼저 받아요. 같은 함대 안에서는 모든 함선에 1순위 줄부터 채우고 2순위로 내려가요. 같은 함선이 아래 함대에 또 있으면 위 세팅을 같이 써요.</p><div class="row" style="margin-top:10px"><button class="btn" id="copyRes">결과를 글로 복사</button><span class="small muted" id="copyMsg"></span></div></div>';
   h += '</div>';
   h += '<div class="legend"><span><span class="rk r1">1순위</span> REGAL 첫 줄</span><span><span class="rk r2">2순위</span> <span class="rk r3">3순위↓</span> 아래 줄</span><span><span class="rk rx">목록 밖</span> REGAL 목록에 없는 장비로 칸만 채움</span><span>왼쪽 색 = 장비 등급</span></div>';
@@ -348,15 +368,15 @@ function renderResult() {
     const fl = r.fleet;
     h += '<section class="fleet"><div class="fleet-head"><h2>' + esc(fl.name) + '</h2><span class="tag">' + esc(MODES[fl.mode] || fl.mode) + '</span></div>';
     for (const m of r.ships) {
-      if (m.sharedWith) { h += '<div class="shared"><b>' + esc(m.ship.kr) + '</b> — ' + esc(m.sharedWith) + '와 같은 세팅</div>'; continue; }
+      if (m.sharedWith) { h += '<div class="shared row">' + sico(m.ship.uid, 28) + '<span><b>' + esc(m.ship.kr) + '</b> — ' + esc(m.sharedWith) + '와 같은 세팅</span></div>'; continue; }
       const s = m.ship;
       const rates = (s.rt || []).map((v, i) => v ? '<span class="rate">' + RATE_LABEL[i] + ' <b>' + esc(v) + '</b></span>' : '').join('');
-      h += '<article class="ship"><div><div class="ship-name">' + esc(s.kr) + '</div><div class="ship-meta">' + esc(HULL[s.hull] || s.hull) + ' · ' + esc(s.en) + (m.tab ? ' · 탭 ' + esc(m.tab) : '') + '</div><div class="rates">' + rates + '</div>' + m.warn.map(w => '<div class="warnline">' + esc(w) + '</div>').join('') + (m.tab ? '' : '<div class="warnline">REGAL에 이 함선의 장비표가 없어요</div>') + '</div><div class="slots">';
+      h += '<article class="ship"><div><div class="ship-head">' + sico(s.uid, 56) + '<div><div class="ship-name">' + esc(s.kr) + '</div><div class="ship-meta">' + esc(HULL[s.hull] || s.hull) + ' · ' + esc(s.en) + (m.tab ? ' · 탭 ' + esc(m.tab) : '') + '</div></div></div><div class="rates">' + rates + '</div>' + m.warn.map(w => '<div class="warnline">' + esc(w) + '</div>').join('') + (m.tab ? '' : '<div class="warnline">REGAL에 이 함선의 장비표가 없어요</div>') + '</div><div class="slots">';
       for (let i = 0; i < 5; i++) {
         const sl = m.slots[i];
         if (!sl) { h += '<div class="slot empty"><div class="slot-type"><span>' + esc(slotLabel(s, i)) + '</span></div><div class="slot-name">맞는 장비 없음</div></div>'; continue; }
         const note = sl.note ? NOTE_KR[sl.note] : '';
-        h += '<div class="slot ra' + erar(sl.id) + '"><div class="slot-type"><span>' + esc(slotLabel(s, i)) + '</span>' + rankChip(sl.rank) + '</div><div class="slot-name">' + esc(ename(sl.id)) + '</div>' + (note ? '<div class="note">' + esc(note) + '</div>' : '') + '</div>';
+        h += '<div class="slot ra' + erar(sl.id) + '"><div class="slot-type"><span>' + esc(slotLabel(s, i)) + '</span>' + rankChip(sl.rank) + '</div><div class="slot-body">' + eico(sl.id, 40) + '<div><div class="slot-name">' + esc(ename(sl.id)) + '</div>' + (note ? '<div class="note">' + esc(note) + '</div>' : '') + '</div></div></div>';
       }
       h += '</div></article>';
     }
@@ -381,7 +401,7 @@ function renderFleets() {
     h += '<select id="fmode-' + fi + '" aria-label="REGAL 탭">' + Object.entries(MODES).map(([k, v]) => '<option value="' + k + '"' + (fl.mode === k ? ' selected' : '') + '>' + v + '</option>').join('') + '</select>';
     h += '<select id="faa-' + fi + '" aria-label="적 항공기"' + (fl.mode === 'camp' ? '' : ' hidden') + '><option value="many"' + (fl.aa !== 'few' ? ' selected' : '') + '>항모: 적기 많은 맵</option><option value="few"' + (fl.aa === 'few' ? ' selected' : '') + '>항모: 적기 적은 맵</option></select>';
     h += '<button class="btn icon" data-act="fup" title="위로" aria-label="함대 위로"' + (fi === 0 ? ' disabled' : '') + '>↑</button><button class="btn icon" data-act="fdown" title="아래로" aria-label="함대 아래로"' + (fi === state.fleets.length - 1 ? ' disabled' : '') + '>↓</button><button class="btn icon" data-act="fdel" title="함대 삭제" aria-label="함대 삭제">✕</button></div>';
-    h += '<div class="chips">' + fl.ships.map((uid, si) => { const s = SHIPS[uid]; return '<span class="chip">' + esc(s ? s.kr : uid) + '<button data-act="sleft" data-si="' + si + '" aria-label="앞으로"' + (si === 0 ? ' disabled' : '') + '>‹</button><button data-act="sright" data-si="' + si + '" aria-label="뒤로">›</button><button data-act="sdel" data-si="' + si + '" aria-label="빼기">✕</button></span>'; }).join('') + (fl.ships.length ? '' : '<span class="muted small">함선이 없어요</span>') + '</div>';
+    h += '<div class="chips">' + fl.ships.map((uid, si) => { const s = SHIPS[uid]; return '<span class="chip">' + sico(uid, 22) + esc(s ? s.kr : uid) + '<button data-act="sleft" data-si="' + si + '" aria-label="앞으로"' + (si === 0 ? ' disabled' : '') + '>‹</button><button data-act="sright" data-si="' + si + '" aria-label="뒤로">›</button><button data-act="sdel" data-si="' + si + '" aria-label="빼기">✕</button></span>'; }).join('') + (fl.ships.length ? '' : '<span class="muted small">함선이 없어요</span>') + '</div>';
     h += '<div class="row"><div class="search"><input id="fsearch-' + fi + '" placeholder="함선 이름으로 추가 (예: 타이거, 시나노)" autocomplete="off"><div class="drop" id="fdrop-' + fi + '" hidden></div></div></div></div>';
   });
   h += '</div><div class="row" style="margin-top:14px"><button class="btn primary" id="addFleet">함대 추가</button></div>';
@@ -407,7 +427,7 @@ function renderFleets() {
       const q = inp.value.trim().toLowerCase().replace(/\s+/g, '');
       if (!q) { drop.hidden = true; return; }
       const hits = SHIP_LIST.filter(s => s.kr.toLowerCase().replace(/\s+/g, '').includes(q) || s.en.toLowerCase().replace(/\s+/g, '').includes(q)).slice(0, 14);
-      drop.innerHTML = hits.length ? hits.map(s => '<button data-uid="' + esc(s.uid) + '"><span>' + esc(s.kr) + '</span><span class="muted small">' + esc(HULL[s.hull] || s.hull) + '</span></button>').join('') : '<div class="small muted" style="padding:8px 10px">찾는 함선이 없어요</div>';
+      drop.innerHTML = hits.length ? hits.map(s => '<button data-uid="' + esc(s.uid) + '"><span>' + sico(s.uid, 28) + esc(s.kr) + '</span><span class="muted small">' + esc(HULL[s.hull] || s.hull) + '</span></button>').join('') : '<div class="small muted" style="padding:8px 10px">찾는 함선이 없어요</div>';
       drop.hidden = false;
     };
     inp.addEventListener('input', show);
@@ -444,7 +464,7 @@ function drawInv() {
   const total = Object.values(state.counts).reduce((a, b) => a + b, 0);
   document.getElementById('invCount').textContent = '보유 ' + Object.keys(state.counts).length + '종 · ' + total + '개';
   const shown = ids.slice(0, 240);
-  list.innerHTML = shown.length ? shown.map(id => { const n = state.counts[id] || 0; return '<div class="item ra' + erar(id) + (n ? '' : ' zero') + '"><span class="bar"></span><div class="nm">' + esc(ename(id)) + '<small>' + '★'.repeat(Math.max(1, erar(id))) + ' · ' + esc(TYPE[etype(id)] || '') + ' · ' + esc(NATKR[enat(id)] || enat(id) || '공용') + '</small></div><button class="btn icon" data-id="' + id + '" data-d="-1" aria-label="하나 빼기">−</button><input type="number" min="0" max="999" id="cnt-' + id + '" data-id="' + id + '" value="' + n + '" aria-label="' + esc(ename(id)) + ' 개수"><button class="btn icon" data-id="' + id + '" data-d="1" aria-label="하나 더하기">+</button></div>'; }).join('') + (ids.length > shown.length ? '<div class="small muted">' + (ids.length - shown.length) + '개 더 있음 · 검색으로 좁혀 주세요</div>' : '') : '<div class="empty-state">' + (invOwned ? '아직 등록한 장비가 없어요. 위에서 캡처를 올리거나, 이름으로 검색해 개수를 넣어 주세요.' : '찾는 장비가 없어요.') + '</div>';
+  list.innerHTML = shown.length ? shown.map(id => { const n = state.counts[id] || 0; return '<div class="item ra' + erar(id) + (n ? '' : ' zero') + '">' + eico(id, 36) + '<div class="nm">' + esc(ename(id)) + '<small>' + '★'.repeat(Math.max(1, erar(id))) + ' · ' + esc(TYPE[etype(id)] || '') + ' · ' + esc(NATKR[enat(id)] || enat(id) || '공용') + '</small></div><button class="btn icon" data-id="' + id + '" data-d="-1" aria-label="하나 빼기">−</button><input type="number" min="0" max="999" id="cnt-' + id + '" data-id="' + id + '" value="' + n + '" aria-label="' + esc(ename(id)) + ' 개수"><button class="btn icon" data-id="' + id + '" data-d="1" aria-label="하나 더하기">+</button></div>'; }).join('') + (ids.length > shown.length ? '<div class="small muted">' + (ids.length - shown.length) + '개 더 있음 · 검색으로 좁혀 주세요</div>' : '') : '<div class="empty-state">' + (invOwned ? '아직 등록한 장비가 없어요. 위에서 캡처를 올리거나, 이름으로 검색해 개수를 넣어 주세요.' : '찾는 장비가 없어요.') + '</div>';
 }
 
 // ---------- capture (Claude reads screenshots) ----------
@@ -484,7 +504,7 @@ function showCapture(rows, unknown) {
   const out = document.getElementById('capOut');
   rows.sort((a, b) => erar(b.id) - erar(a.id));
   let h = '<div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>반영</th><th>장비</th><th>캡처 개수</th><th>지금 개수</th><th>메모</th></tr></thead><tbody>';
-  rows.forEach((r, i) => { h += '<tr><td><input type="checkbox" id="cap-' + i + '" ' + (r.low ? '' : 'checked') + ' aria-label="반영"></td><td>' + esc(ename(r.id)) + ' <span class="muted small">' + '★'.repeat(erar(r.id)) + '</span></td><td><input type="number" min="0" id="capn-' + i + '" value="' + r.count + '" style="width:60px"></td><td class="num">' + (state.counts[r.id] || 0) + '</td><td class="small muted">' + (r.low ? '확실하지 않음 · ' : '') + esc(r.seen.slice(0, 2).join(', ')) + '</td></tr>'; });
+  rows.forEach((r, i) => { h += '<tr><td><input type="checkbox" id="cap-' + i + '" ' + (r.low ? '' : 'checked') + ' aria-label="반영"></td><td>' + eico(r.id, 24) + ' ' + esc(ename(r.id)) + ' <span class="muted small">' + '★'.repeat(erar(r.id)) + '</span></td><td><input type="number" min="0" id="capn-' + i + '" value="' + r.count + '" style="width:60px"></td><td class="num">' + (state.counts[r.id] || 0) + '</td><td class="small muted">' + (r.low ? '확실하지 않음 · ' : '') + esc(r.seen.slice(0, 2).join(', ')) + '</td></tr>'; });
   h += '</tbody></table></div>';
   if (unknown.length) h += '<p class="small muted">못 찾은 타일 ' + unknown.length + '개: ' + esc(unknown.map(u => u.seen || '?').slice(0, 8).join(', ')) + '</p>';
   h += '<div class="row" style="margin-top:10px"><label class="row small"><input type="radio" name="capMode" id="capReplace" value="set" checked> 캡처 개수로 바꾸기</label><label class="row small"><input type="radio" name="capMode" id="capAdd" value="add"> 지금 개수에 더하기</label><button class="btn primary" id="capApply">체크한 ' + rows.length + '종 반영</button><button class="btn" id="capCancel">취소</button></div>';

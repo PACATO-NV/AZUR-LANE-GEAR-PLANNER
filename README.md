@@ -18,6 +18,8 @@
 | `data/equip_lite.json` | altoy의 장비 데이터 (한국어 장비 이름, 종류, 진영) |
 | `data/ship_group.json` | altoy의 함선 그룹 데이터 (한국어 함선 이름) |
 | `data/app_data.json` | 앱에 들어가는 압축 데이터 |
+| `atlas/ships.webp` | REGAL의 함선 사각 아이콘 960개를 64px로 모은 스프라이트 (40열, `S` 순서) |
+| `atlas/equips.webp` | REGAL의 장비 아이콘 896개를 64px로 모은 스프라이트 (30열, `data/equip_lite.json` 순서 = `EI`) |
 | `seed/inventory.json` | 내 창고 장비 개수 (`{장비 id: 개수}`, 2026-10-28 캡처 기준 148종) |
 | `seed/fleets.json` | 내 함대 편성 8개 (우선순위 순서) |
 | `tests/render_test.js` | Playwright로 독립 실행판을 열어 배치 결과를 글로 뽑는다 |
@@ -31,6 +33,8 @@
 - `S`: 함선 목록. 각 항목은 `[uid, 한국어 이름, REGAL 이름, 함종, 진영, 레어도, 평가[14지 쫄, 14지 보스, 15·16지 쫄, 15·16지 보스, META], 칸 종류[5], 탭→usecase id, 잠수함 로드아웃, 진영 조건]`
 - 칸별 우선순위는 REGAL 구조를 그대로 쓴다: `U[usecase] = [slot×5]` → `SL[slot] = [row…]`(위가 1순위) → `RW[row] = [equipKey…]` → `EK[equipKey] = 장비 id`(잠수함은 5칸 한 세트 배열)
 - REGAL 탭: `C`, `C-13+`, `C-12-`(다중 웨이브), `C-AA`/`C-noAA`(항모: 적기 많음/적음), `L`/`M`/`H`(보스 경·중형·중장갑)
+- `EI`: 장비 id → 장비 스프라이트 칸 번호. 함선 스프라이트 칸 번호는 `S` 배열 순서와 같다
+- `ATLAS`: 스프라이트 파일 경로, 열 수, 칸 크기
 - `NOTE`: REGAL이 줄에 붙인 메모 ("Any 45 FP", "lower rarity ok" 등)
 
 ## 배치 규칙 (`allocate()` in `src/app_template.html`)
@@ -65,5 +69,6 @@
 
 ## 출처
 
-- REGAL: [2026 Endgame Azur Lane Tier List](https://azur-lane-regal.suchiguma.com/) — 함선 평가와 칸별 장비 우선순위. 데이터의 권리는 REGAL 제작자에게 있다.
+- REGAL: [2026 Endgame Azur Lane Tier List](https://azur-lane-regal.suchiguma.com/) — 함선 평가, 칸별 장비 우선순위, 함선·장비 아이콘. 데이터의 권리는 REGAL 제작자에게 있다.
+- 함선·장비 아이콘의 저작권은 벽람항로 개발사(Manjuu·Yongshi)와 운영사(Yostar)에 있다. 이 저장소는 비상업 팬 도구이며, 권리자가 요청하면 아이콘을 내린다.
 - altoy: [장비 DB](https://jforplay.github.io/altoy/equip/equip-viewer/) — 한국어 장비·함선 이름.

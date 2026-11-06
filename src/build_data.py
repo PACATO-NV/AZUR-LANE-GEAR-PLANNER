@@ -67,7 +67,8 @@ for k in need_ek:
     v = GM['equip'][str(k)]
     for j, x in enumerate(v if isinstance(v, list) else [v]):
         if x.get('name'): notes.setdefault(x['id'], x['name'])
-DATA = dict(E=E, S=ships_out, U=U, SL=SL, RW=RW, EK=EK, NOTE=notes, NAT=NAT, date='2026-11-07')
+EI = {x['id']: i for i, x in enumerate(json.load(open(ROOT+'/data/equip_lite.json')))}
+DATA = dict(E=E, S=ships_out, EI=EI, ATLAS={'ship': {'file': 'atlas/ships.webp', 'cols': 40, 'cell': 64}, 'eq': {'file': 'atlas/equips.webp', 'cols': 30, 'cell': 64}}, U=U, SL=SL, RW=RW, EK=EK, NOTE=notes, NAT=NAT, date='2026-11-07')
 s = json.dumps(DATA, ensure_ascii=False, separators=(',', ':'))
 open(ROOT+'/data/app_data.json', 'w').write(s)
 print(len(s), len(ships_out), len(E))
